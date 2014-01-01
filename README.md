@@ -9,7 +9,7 @@ To run
 
 1.	Install mongodb and node
 2.	Create a facebook app and note the id and key
-3.	create a config.json file - something like this:
+3.	create a config.json file - something like this
 
 		{
 			"fbSettings": {
