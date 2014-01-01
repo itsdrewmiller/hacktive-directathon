@@ -1,0 +1,39 @@
+<html>
+	<head>
+		<title>NGP VAN Hackathon!</title>
+		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+		<script src="//code.jquery.com/jquery-2.0.3.min.js"></script>
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
+	</head>
+	<body ng-app="hacktive-directathon" ng-controller="MainCtrl">
+
+		<% if(user) { %>
+			<p>You're logged in as <strong><%= user.name -%></strong>.
+		<% } else { %>
+			<p><a href="/auth/facebook">Login with Facebook</a>
+		<% } %>
+
+		<h3>Projects</h3>
+		<div ng-repeat="project in projects">
+			<strong>{{project.name}}</strong> - <em>{{project.authors.join(', ')}}</em>
+		</div>
+		<h3>Awards</h3>
+		<div ng-repeat="award in awards">
+			<strong>{{award.name}}</strong> - {{award.description}}
+		</div>
+
+		<script src="js/main.js"></script>
+		<script>
+			app.value('projects', <%- JSON.stringify(projects) %>);
+			app.value('awards', <%- JSON.stringify(awards) %>);
+			app.value('votes', <%- JSON.stringify(votes) %>);
+			<% if(user) { %>
+				app.value('userId', '<%- user._id.toString() %>');
+			<% } else { %>
+				app.value('userId', null);
+			<% } %>
+		</script>
+	</body>
+</html>
