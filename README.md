@@ -5,12 +5,11 @@ A node/angular web app for hackathon voting, with active directory support.  Or 
 
 
 To run
-======
+------
 
 1.	Install mongodb and node
 2.	Create a facebook app and note the id and key
 3.	create a config.json file - something like this:
-
 	{
 		"fbSettings": {
 			"APP_ID": "Your ID here",
@@ -66,7 +65,4 @@ To run
 			}
 		]
 	}
-
-4.	Run the program!
-
-	supervisor hd.js
+4.	Run the program: `supervisor hd.js`
