@@ -1,3 +1,6 @@
 [submodule "lib/irv-cascade"]
 	path = lib/irv-cascade
 	url = https://github.com/itsdrewmiller/irv-cascade.git
+[submodule "lib/seed-random"]
+	path = lib/seed-random
+	url = https://github.com/itsdrewmiller/seed-random.git
