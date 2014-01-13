@@ -12,16 +12,28 @@
 	</head>
 	<body ng-app="hacktive-directathon" ng-controller="MainCtrl">
 
-		<% if(user) { %>
-			<p>You're logged in as <strong><%= user.name -%></strong>.
-		<% } else { %>
-			<p><a href="/auth/facebook">Login with Facebook</a>
-		<% } %>
+		<script type="text/ng-template" id="new-project.html">
+			<strong><a ng-click="createProject()">Create a new Project</a> or <a href="">Join an Existing Project</a></strong>
+		</script>
 
-		<h3>Projects</h3>
-		<div ng-repeat="project in projects">
-			<strong>{{project.name}}</strong> - <em>{{project.authors.join(', ')}}</em>
-		</div>
+		<script type="text/ng-template" id="edit-project.html">
+			<strong css="display: inline;">{{project.name}}</strong> <a href="">Edit</a> <a href="">Delete</a>
+			<p>{{ project.description }}
+		</script>
+
+		<script type="text/ng-template" id="create-project.html">
+			<input placeholder="Project Name" ng-model="$parent.newProject.name" />
+			<textarea placeholder="Description" ng-model="$parent.newProject.description"></textarea>
+			<input type="button" value="Save" ng-click="$parent.saveProject()" />
+		</script>
+
+		{{ newProject.name }}
+		{{ newProject.description }}
+
+		<p>You're logged in as <strong><%= user.name -%></strong>.
+
+		<div ng-include="projectTmpl.url"></div>
+
 		<h3>Awards</h3>
 		<div ng-repeat="award in awards">
 			<strong>{{award.name}}</strong> - {{award.description}}
@@ -29,14 +41,18 @@
 
 		<script src="js/main.js"></script>
 		<script>
-			app.value('projects', <%- JSON.stringify(projects) %>);
 			app.value('awards', <%- JSON.stringify(awards) %>);
-			app.value('votes', <%- JSON.stringify(votes) %>);
+			<% if (project) { %>
+				app.value('project', <%- JSON.stringify(project) %>);
+			<% } else { %>
+				app.value('project', null);
+			<% } %>
 			<% if(user) { %>
 				app.value('userId', '<%- user._id.toString() %>');
 			<% } else { %>
 				app.value('userId', null);
 			<% } %>
 		</script>
+
 	</body>
 </html>

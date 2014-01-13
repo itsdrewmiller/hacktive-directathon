@@ -34,35 +34,62 @@ _.each(projectsToUpsert, function(project) {
 });
 
 
-var repo = {
+var repo = function(voter) {
 
-	getAwards: function(callback) {
+	var self = this;
+
+	self.getAwards = function(callback) {
 		awards.find({}, { _id: false }).toArray(callback);
-	},
+	};
 
-	getProjects: function(callback) {
+	self.getProjects = function(callback) {
 		projects.find({}, { _id: false }).toArray(callback);
-	},
+	};
 
-	getVotes: function(callback) {
+	self.getVotes = function(callback) {
 		votes.find({}, { _id: false }).toArray(callback);
-	},
+	};
 
-	saveVote: function(vote, callback) {
+	self.getMyProject = function(callback) {
+		console.log(voter._id);
+		projects.find({ authors: { $elemMatch: { _id: voter._id } } }, { _id: false }).toArray(function(err, arr) {
+			if (err) callback(err);
+			if (arr.length === 0) {
+				callback(null, null);
+			} else if (arr.length === 1) {
+				callback(null, arr[0]);
+			} else {
+				callback('Too many results');
+			}
+		});
+	};
+
+	self.createProject = function(project, callback) {
+		project.authors = [ voter ];
+
+		projects.insert(project, callback);
+
+	};
+
+	self.getMyVotes = function(callback) {
+		projects.find({ voter: { $elemMatch: { _id: voter._id } } }, { _id: false }).toArray(callback);
+	};
+
+	self.saveVote = function(vote, callback) {
 		// a vote looks like:
 		// { voter: { .. who knows .. }, award: :awardId, votes: [:firstPlaceProjectId, :secondPlaceProjectId, .. ]}
-	},
+	};
 
-	saveVoter: function(voter, callback) {
-		if (voter.facebookId) {
-			voters.findOne({ facebookId: voter.facebookId }, function(err, match) {
+	self.saveVoter = function(newVoter, callback) {
+		if (newVoter.facebookId) {
+			voters.findOne({ facebookId: newVoter.facebookId }, function(err, match) {
 				if (match) {
 					// We cool
 					callback(null, match);
 				} else {
 					// Gotta create
-					voters.insert(voter, function(err) {
-						voters.findOne({ facebookId: voter.facebookId }, function(err, match2) {
+					voters.insert(newVoter, function(err) {
+						voters.findOne({ facebookId: newVoter.facebookId }, function(err, match2) {
 							callback(null, match2);
 						});
 					});
@@ -71,11 +98,11 @@ var repo = {
 		} else {
 			callback('Unknown voter type');
 		}
-	},
+	};
 
-	getVoter: function(hexId, callback) {
+	self.getVoter = function(hexId, callback) {
 		voters.findOne({ _id: new ObjectId(hexId) }, callback);
-	}
+	};
 };
 
 module.exports = repo;

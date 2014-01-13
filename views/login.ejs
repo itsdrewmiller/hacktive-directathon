@@ -1,0 +1,21 @@
+<html>
+	<head>
+		<title>NGP VAN Hackathon!</title>
+		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+		<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+		<script src="//code.jquery.com/jquery-2.0.3.min.js"></script>
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
+		<script src="lib/seed-random/index.js"></script>
+		<script src="lib/irv-cascade/irv-cascade.js"></script>
+	</head>
+	<body>
+
+		<% if(user) { %>
+			<p>You're logged in as <strong><%= user.name -%>.  <a href="/">Go to the main page</a>.</strong>.
+		<% } else { %>
+			<p><a href="/auth/facebook">Login with Facebook</a>
+		<% } %>
+	</body>
+</html>

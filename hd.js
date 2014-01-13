@@ -1,6 +1,6 @@
 var express = require('express');
 var path = require('path');
-var hdRepo = require('./model/hd-repository');
+var HdRepo = require('./model/hd-repository');
 var passport = require('passport');
 var FacebookStrategy = require('passport-facebook').Strategy;
 var async = require('async');
@@ -46,6 +46,7 @@ passport.use(new FacebookStrategy({
 	},
 	function(accessToken, refreshToken, profile, done) {
 		// we want to create or update the user based on their facebook id
+		var hdRepo = new HdRepo(null);
 		hdRepo.saveVoter({ facebookId: profile.id, name: profile.displayName }, function(err, user) {
 			return done(null, user);
 		});
@@ -61,6 +62,7 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
+	var hdRepo = new HdRepo(null);
 	hdRepo.getVoter(id, done);
 });
 
@@ -75,23 +77,40 @@ app.get('/', function(req, res){
 	// Load the main page - project description and list of awards
 	// async/await would be nice
 
-	async.parallel({
-		awards: hdRepo.getAwards,
-		projects: hdRepo.getProjects,
-		votes: hdRepo.getVotes
-	},
-	function(err, results) {
-		res.render('index', {
-			awards: results.awards,
-			projects: results.projects,
-			votes: results.votes,
-			user: req.user
+	if (!req.user) {
+		res.redirect('/login');
+	} else {
+		console.log('10');
+		var hdRepo = new HdRepo(req.user);
+		console.log('20');
+
+		async.parallel({
+			awards: hdRepo.getAwards,
+			myProject: hdRepo.getMyProject,
+			myVotes: hdRepo.getMyVotes
+		},
+		function(err, results) {
+		console.log('30');
+			res.render('index', {
+				awards: results.awards,
+				project: results.myProject,
+				votes: results.myVotes,
+				user: req.user
+			});
 		});
+	}
+
+});
+
+app.get('/login', function(req, res) {
+	res.render('login', {
+		user: req.user
 	});
 });
 
 app.get('/awards', function(req, res) {
 	// return all the possible voting categories, with priority ordering
+	var hdRepo = new HdRepo(req.user);
 	hdRepo.getAwards(function(err, awards) {
 		res.send(awards);
 	});
@@ -102,9 +121,23 @@ app.post('/awards/:award/vote', function(req, res) {
 });
 
 app.get('/projects', function(req, res) {
+
+	var hdRepo = new HdRepo(req.user);
+
 	hdRepo.getProjects(function(err, projects) {
 		res.send(projects);
 	});
+});
+
+app.post('/projects', function(req, res) {
+	var hdRepo = new HdRepo(req.user);
+
+	var project = req.body;
+
+	hdRepo.createProject(project, function(err, newProj) {
+		res.end();		
+	});
+
 });
 
 app.listen(port);

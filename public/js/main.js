@@ -6,15 +6,41 @@ var app = angular.module('hacktive-directathon', ['ngResource']);
 
 // };
 
-app.service('$$hd', ['projects','awards', function(projects, awards) {
+app.service('$$hd', ['project','awards', '$resource', function(project, awards, $resource) {
+
+	var projects = $resource('/projects/:projectId');
+
 	return {
-		projects: projects,
-		awards: awards
+		project: project,
+		awards: awards,
+		saveProject: function(newProject) {
+			var self = this;
+			console.dir(newProject);
+			projects.save(newProject, function() {
+				self.project = newProject;
+			});
+		}
 	};
 }]);
 
 app.controller('MainCtrl', function($scope, $$hd) {
-	$scope.projects = $$hd.projects;
+
+	$scope.project = $$hd.project;
 	$scope.awards = $$hd.awards;
+
+	$scope.projectTmpl = {
+		url: $scope.project ? 'edit-project.html' : 'new-project.html'
+	};
+
+	$scope.createProject = function() {
+		$scope.projectTmpl = {
+			url: 'create-project.html'
+		};
+	};
+
+	$scope.saveProject = function() {
+		$$hd.saveProject($scope.newProject);
+	};
+
 });
 
