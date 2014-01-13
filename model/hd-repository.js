@@ -8,7 +8,6 @@ var votes = db.collection('votes');
 var awards = db.collection('awards');
 var projects = db.collection('projects');
 var voters = db.collection('voters');
-voters.drop();
 
 nconf
 	.argv()
@@ -32,7 +31,6 @@ _.each(projectsToUpsert, function(project) {
 		{ $set: project },
 		{ upsert: true});
 });
-
 
 var repo = function(voter) {
 
