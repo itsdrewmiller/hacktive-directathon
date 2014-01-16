@@ -3,45 +3,61 @@
 		<title>NGP VAN Hackathon!</title>
 		<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 		<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
-		<script src="//code.jquery.com/jquery-2.0.3.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
 		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular-resource.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.9.0/ui-bootstrap.min.js"></script>
 		<script src="lib/seed-random/index.js"></script>
 		<script src="lib/irv-cascade/irv-cascade.js"></script>
+		<script src="lib/ui-sortable/sortable.js"></script>
 	</head>
 	<body ng-app="hacktive-directathon" ng-controller="MainCtrl">
 
-		<script type="text/ng-template" id="new-project.html">
-			<strong><a ng-click="createProject()">Create a new Project</a> or <a href="">Join an Existing Project</a></strong>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.9.0/ui-bootstrap-tpls.min.js"></script>
+
+		<script type="text/ng-template" id="new-project.tmpl.html">
+			<strong><a ng-click="editProject()">Create a new Project</a> or <a href="">Join an Existing Project</a></strong>
 		</script>
 
-		<script type="text/ng-template" id="edit-project.html">
-			<strong css="display: inline;">{{project.name}}</strong> <a href="">Edit</a> <a href="">Delete</a>
+		<script type="text/ng-template" id="existing-project.tmpl.html">
+			<strong css="display: inline;">{{project.name}}</strong> <a href="" ng-click="editProject()">Edit</a> <a href="" ng-click="deleteProject()">Delete</a>
 			<p>{{ project.description }}
 		</script>
 
-		<script type="text/ng-template" id="create-project.html">
-			<input placeholder="Project Name" ng-model="$parent.newProject.name" />
-			<textarea placeholder="Description" ng-model="$parent.newProject.description"></textarea>
-			<input type="button" value="Save" ng-click="$parent.saveProject()" />
+		<script type="text/ng-template" id="edit-project.tmpl.html">
+			<input placeholder="Project Name" ng-model="$parent.project.name" />
+			<textarea placeholder="Description" ng-model="$parent.project.description"></textarea>
+			<input type="button" class="btn btn-default" value="Save" ng-click="$parent.saveProject()" />
 		</script>
 
-		{{ newProject.name }}
-		{{ newProject.description }}
+		<script type="text/ng-template" id="vote.tmpl.html">
+			<div class="modal-header">Drag your votes into the order you wish</div>
+			<div class="modal-body">
+				<ol ui-sortable ng-model="projects">
+					<li ng-repeat="project in projects">{{project.name}}</li>
+				</ol>
+			</div>
+			<div class="modal-footer">
+				<input type="button" class="btn btn-default" ng-click="saveVote()" value="Save" />
+			</div>
+		</script>
 
 		<p>You're logged in as <strong><%= user.name -%></strong>.
 
-		<div ng-include="projectTmpl.url"></div>
+		<!-- <div ng-include="projectTmpl.url"></div> -->
 
 		<h3>Awards</h3>
 		<div ng-repeat="award in awards">
-			<strong>{{award.name}}</strong> - {{award.description}}
+			<strong>{{award.name}}</strong> - <a href="" ng-click="openVote(award)">Vote</a> - {{award.description}}
 		</div>
 
 		<script src="js/main.js"></script>
 		<script>
 			app.value('awards', <%- JSON.stringify(awards) %>);
+			app.value('projects', <%- JSON.stringify(projects) %>);
+			app.value('votes', <%- JSON.stringify(votes) %>);
 			<% if (project) { %>
 				app.value('project', <%- JSON.stringify(project) %>);
 			<% } else { %>

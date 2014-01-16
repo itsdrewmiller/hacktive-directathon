@@ -5,6 +5,7 @@ var passport = require('passport');
 var FacebookStrategy = require('passport-facebook').Strategy;
 var async = require('async');
 var nconf = require('nconf');
+var irv = require('./lib/irv-cascade/irv-cascade.js');
 
 nconf
 	.argv()
@@ -80,20 +81,19 @@ app.get('/', function(req, res){
 	if (!req.user) {
 		res.redirect('/login');
 	} else {
-		console.log('10');
 		var hdRepo = new HdRepo(req.user);
-		console.log('20');
 
 		async.parallel({
+			projs: hdRepo.getProjects,
 			awards: hdRepo.getAwards,
 			myProject: hdRepo.getMyProject,
 			myVotes: hdRepo.getMyVotes
 		},
 		function(err, results) {
-		console.log('30');
 			res.render('index', {
 				awards: results.awards,
 				project: results.myProject,
+				projects: results.projs,
 				votes: results.myVotes,
 				user: req.user
 			});
@@ -125,17 +125,67 @@ app.get('/projects', function(req, res) {
 	var hdRepo = new HdRepo(req.user);
 
 	hdRepo.getProjects(function(err, projects) {
+		_.each(projects, function(project) {
+			project._id = project._id.toString();
+		});
 		res.send(projects);
 	});
 });
 
-app.post('/projects', function(req, res) {
+app.post('/projects/:projectId?', function(req, res) {
 	var hdRepo = new HdRepo(req.user);
 
 	var project = req.body;
 
-	hdRepo.createProject(project, function(err, newProj) {
-		res.end();		
+	var cb = function(err, newProj) {
+		res.send(newProj);		
+	};
+
+	if (req.params.projectId) {
+		hdRepo.updateProject(project, cb);		
+	} else {
+		hdRepo.createProject(project, cb);
+	}
+
+});
+
+app.post('/votes/:voteId?', function(req, res) {
+
+	var hdRepo = new HdRepo(req.user);
+
+	var vote = req.body;
+
+	var cb = function(err) {
+		res.send(vote);		
+	};
+
+	hdRepo.saveVote(vote, cb);
+
+});
+
+app.get('/results', function(req, res) {
+
+	var hdRepo = new HdRepo(req.user);
+
+	async.parallel({
+		projs: hdRepo.getProjects,
+		awards: hdRepo.getAwards,
+		votes: hdRepo.getVotes
+	},
+	function(err, results) {
+
+		var voteGroup = _.groupBy(results.votes, 'awardId');
+		_.each(voteGroup, function(arrOfVotes, awardId) {
+			voteGroup[awardId] = _.map(arrOfVotes, function(vote) { return vote.projectIds; });
+		});
+
+		var cascade = {
+			votes: voteGroup
+		};
+		cascade.elections = _.map(results.awards, function(award) { return award._id; });
+		cascade.candidates = _.map(results.projs, function(proj) { return proj._id; });
+		res.send(irv.calculate(cascade));
+
 	});
 
 });

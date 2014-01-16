@@ -32,30 +32,53 @@ _.each(projectsToUpsert, function(project) {
 		{ upsert: true});
 });
 
+var cleanIds = function(callback) {
+	return function(err, results) {
+		_.each(results, function(result) {
+			if (result) {
+				result._id = result._id.toString();				
+			}
+		});
+		callback(err, results);
+	};
+};
+
+var cleanId = function(callback) {
+	return function(err, result) {
+		if (result && result._id) {
+			result._id = result._id.toString();			
+		}
+		callback(err, result);
+	};
+};
+
 var repo = function(voter) {
 
 	var self = this;
 
 	self.getAwards = function(callback) {
-		awards.find({}, { _id: false }).toArray(callback);
+		awards.find({}).toArray(cleanIds(callback));
 	};
 
 	self.getProjects = function(callback) {
-		projects.find({}, { _id: false }).toArray(callback);
+		projects.find({}).toArray(cleanIds(callback));
 	};
 
 	self.getVotes = function(callback) {
-		votes.find({}, { _id: false }).toArray(callback);
+		votes.find({}).toArray(cleanIds(callback));
+	};
+
+	self.getMyVotes = function(callback) {
+		votes.find({ voterId: voter._id }).toArray(cleanIds(callback));
 	};
 
 	self.getMyProject = function(callback) {
-		console.log(voter._id);
-		projects.find({ authors: { $elemMatch: { _id: voter._id } } }, { _id: false }).toArray(function(err, arr) {
+		projects.find({ authors: { $elemMatch: { _id: voter._id } } }).toArray(function(err, arr) {
 			if (err) callback(err);
 			if (arr.length === 0) {
 				callback(null, null);
 			} else if (arr.length === 1) {
-				callback(null, arr[0]);
+				cleanId(callback)(null, arr[0]);
 			} else {
 				callback('Too many results');
 			}
@@ -65,17 +88,27 @@ var repo = function(voter) {
 	self.createProject = function(project, callback) {
 		project.authors = [ voter ];
 
-		projects.insert(project, callback);
+		projects.insert(project, function(err, newProject) {
+			cleanId(callback)(err, newProject);
+		});
 
 	};
 
-	self.getMyVotes = function(callback) {
-		projects.find({ voter: { $elemMatch: { _id: voter._id } } }, { _id: false }).toArray(callback);
+	self.updateProject = function(project, callback) {
+
+		project._id = new ObjectId(project._id);
+
+		projects.save(project, function(err, proj) {
+			callback(err, proj);
+		});
+
 	};
 
 	self.saveVote = function(vote, callback) {
-		// a vote looks like:
-		// { voter: { .. who knows .. }, award: :awardId, votes: [:firstPlaceProjectId, :secondPlaceProjectId, .. ]}
+		vote.voterId = voter._id;
+		console.dir('got here');
+		votes.update({ voterId: vote.voterId, awardId: vote.awardId }, { $set: vote }, { upsert: true }, cleanId(callback));
+		console.dir('and here');
 	};
 
 	self.saveVoter = function(newVoter, callback) {
@@ -83,12 +116,12 @@ var repo = function(voter) {
 			voters.findOne({ facebookId: newVoter.facebookId }, function(err, match) {
 				if (match) {
 					// We cool
-					callback(null, match);
+					cleanId(callback)(null, match);
 				} else {
 					// Gotta create
 					voters.insert(newVoter, function(err) {
 						voters.findOne({ facebookId: newVoter.facebookId }, function(err, match2) {
-							callback(null, match2);
+							cleanId(callback)(null, match2);
 						});
 					});
 				}
@@ -99,7 +132,7 @@ var repo = function(voter) {
 	};
 
 	self.getVoter = function(hexId, callback) {
-		voters.findOne({ _id: new ObjectId(hexId) }, callback);
+		voters.findOne({ _id: new ObjectId(hexId) }, cleanId(callback));
 	};
 };
 
